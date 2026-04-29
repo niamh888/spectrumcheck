@@ -1,0 +1,131 @@
+import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { TIER_CONFIG } from '@/lib/scoring'
+import { DomainBarChart, DomainRadarChart } from '@/components/DomainChart'
+import Navbar from '@/components/Navbar'
+import type { DomainScore, ScoreTier } from '@/types'
+import { ArrowLeft, Printer, PlusCircle } from 'lucide-react'
+
+export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
+
+  const { data: result } = await supabase
+    .from('results')
+    .select('*, assessments(respondent_type, subject_name, completed_at)')
+    .eq('assessment_id', id)
+    .single()
+
+  if (!result) notFound()
+
+  const tier = result.tier as ScoreTier
+  const config = TIER_CONFIG[tier]
+  const domainScores = result.domain_scores as DomainScore[]
+  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; completed_at: string }
+  const completedDate = new Date(assessment.completed_at).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar userEmail={user.email} />
+      <main className="max-w-3xl mx-auto px-4 py-10 print:py-4">
+
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 print:hidden">
+          <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Dashboard
+          </Link>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 text-sm text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print / Save PDF
+            </button>
+            <Link
+              href="/assessment/new"
+              className="flex items-center gap-1.5 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <PlusCircle className="w-4 h-4" />
+              New screening
+            </Link>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Screening Results
+            {assessment.subject_name ? ` — ${assessment.subject_name}` : ''}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">Completed {completedDate}</p>
+        </div>
+
+        {/* Tier badge */}
+        <div className={`rounded-2xl border p-5 mb-8 ${config.bg} ${config.border}`}>
+          <p className={`font-bold text-lg mb-2 ${config.color}`}>{config.label}</p>
+          <p className={`text-sm leading-relaxed ${config.color}`}>{config.message}</p>
+        </div>
+
+        {/* Overall score */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6 flex items-center gap-5">
+          <div className="w-16 h-16 rounded-full bg-indigo-50 border-4 border-indigo-200 flex items-center justify-center shrink-0">
+            <span className="text-xl font-bold text-indigo-700">{result.total_score}</span>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">Overall score</p>
+            <p className="text-sm text-gray-500">Out of 100 across all seven domains</p>
+          </div>
+        </div>
+
+        {/* Bar chart */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-4">Domain breakdown</h2>
+          <DomainBarChart domainScores={domainScores} />
+        </div>
+
+        {/* Radar chart */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-2">Profile overview</h2>
+          <p className="text-sm text-gray-400 mb-4">A radar view shows which areas are most prominent.</p>
+          <DomainRadarChart domainScores={domainScores} />
+        </div>
+
+        {/* Domain detail */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-8">
+          <h2 className="font-semibold text-gray-900 mb-4">Score by area</h2>
+          <div className="space-y-4">
+            {domainScores.map((d) => (
+              <div key={d.domain}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-gray-700">{d.label}</span>
+                  <span className="text-sm font-semibold" style={{ color: d.color }}>{d.score}%</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${d.score}%`, backgroundColor: d.color }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Disclaimer */}
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed">
+          <strong>This is a screening tool, not a diagnostic instrument.</strong> Results do not
+          constitute a diagnosis and should not be treated as one. Only a qualified clinician —
+          such as a psychologist, psychiatrist, or developmental paediatrician — can make a formal
+          diagnosis. If you have concerns, please speak with your GP or seek a specialist referral.
+        </div>
+      </main>
+    </div>
+  )
+}
