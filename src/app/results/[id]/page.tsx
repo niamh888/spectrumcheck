@@ -5,7 +5,7 @@ import { TIER_CONFIG, calculateAllScoringMethods } from '@/lib/scoring'
 import { DomainBarChart, DomainRadarChart } from '@/components/DomainChart'
 import Navbar from '@/components/Navbar'
 import ScoringComparison from '@/components/ScoringComparison'
-import type { DomainScore, ScoreTier } from '@/types'
+import type { DomainScore, ScoreTier, AgeRange, RespondentType } from '@/types'
 import { ArrowLeft, PlusCircle } from 'lucide-react'
 import PrintButton from '@/components/PrintButton'
 
@@ -48,8 +48,8 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   // Calculate all scoring methods
   const scoringResults = calculateAllScoringMethods(
     responseMap,
-    assessmentData.subject_age_range as any,
-    assessmentData.respondent_type as any
+    assessmentData.subject_age_range as AgeRange,
+    assessmentData.respondent_type as RespondentType
   )
 
   return (

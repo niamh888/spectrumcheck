@@ -15,7 +15,7 @@ export default function AssessmentPage() {
   const supabase = createClient()
 
   const [respondentType, setRespondentType] = useState<RespondentType>('self_adult')
-  const [subjectAgeRange, setSubjectAgeRange] = useState<string>('adult_18_plus')
+  const [subjectAgeRange, setSubjectAgeRange] = useState<AgeRange>('adult_18_plus')
   const [responses, setResponses] = useState<Record<string, number>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -86,7 +86,7 @@ export default function AssessmentPage() {
         return
       }
 
-      const { domainScores, totalScore, tier } = calculateResults(responses, 'standard', subjectAgeRange as any, respondentType)
+      const { domainScores, totalScore, tier } = calculateResults(responses, 'standard', subjectAgeRange, respondentType)
 
       const { error: resultsError } = await supabase.from('results').upsert({
         assessment_id: id,
