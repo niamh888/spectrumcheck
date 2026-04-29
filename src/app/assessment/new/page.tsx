@@ -297,13 +297,3 @@ export default function NewAssessmentPage() {
     </div>
   )
 }
-          <ChevronRight className="w-4 h-4" />
-        </button>
-
-        <p className="text-xs text-gray-400 mt-4">
-          Takes approximately 10 minutes · 30 questions across 7 areas
-        </p>
-      </main>
-    </div>
-  )
-}
