@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { QUESTIONS, DOMAINS } from '@/lib/questions'
 import { calculateResults } from '@/lib/scoring'
 import QuestionCard from '@/components/QuestionCard'
-import type { RespondentType } from '@/types'
+import type { RespondentType, AgeRange } from '@/types'
 
 export default function AssessmentPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,21 +15,24 @@ export default function AssessmentPage() {
   const supabase = createClient()
 
   const [respondentType, setRespondentType] = useState<RespondentType>('self_adult')
+  const [subjectAgeRange, setSubjectAgeRange] = useState<string>('adult_18_plus')
   const [responses, setResponses] = useState<Record<string, number>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       const { data } = await supabase
         .from('assessments')
-        .select('respondent_type, status')
+        .select('respondent_type, subject_age_range, status')
         .eq('id', id)
         .single()
       if (!data) { router.push('/dashboard'); return }
       if (data.status === 'completed') { router.push(`/results/${id}`); return }
       setRespondentType(data.respondent_type as RespondentType)
+      setSubjectAgeRange(data.subject_age_range)
 
       const { data: existing } = await supabase
         .from('responses')
@@ -66,30 +69,57 @@ export default function AssessmentPage() {
   async function handleSubmit() {
     if (Object.keys(responses).length < QUESTIONS.length) return
     setSaving(true)
+    setError(null)
 
-    const upserts = Object.entries(responses).map(([question_id, score]) => ({
-      assessment_id: id,
-      question_id,
-      score,
-    }))
+    try {
+      const upserts = Object.entries(responses).map(([question_id, score]) => ({
+        assessment_id: id,
+        question_id,
+        score,
+      }))
 
-    await supabase.from('responses').upsert(upserts, { onConflict: 'assessment_id,question_id' })
+      const { error: responsesError } = await supabase.from('responses').upsert(upserts, { onConflict: 'assessment_id,question_id' })
+      if (responsesError) {
+        console.error('Responses error:', responsesError)
+        setError(`Failed to save responses: ${responsesError.message}`)
+        setSaving(false)
+        return
+      }
 
-    const { domainScores, totalScore, tier } = calculateResults(responses)
+      const { domainScores, totalScore, tier } = calculateResults(responses, 'standard', subjectAgeRange as any, respondentType)
 
-    await supabase.from('results').upsert({
-      assessment_id: id,
-      domain_scores: domainScores,
-      total_score: totalScore,
-      tier,
-    }, { onConflict: 'assessment_id' })
+      const { error: resultsError } = await supabase.from('results').upsert({
+        assessment_id: id,
+        domain_scores: domainScores,
+        total_score: totalScore,
+        tier,
+      }, { onConflict: 'assessment_id' })
+      
+      if (resultsError) {
+        console.error('Results error:', resultsError)
+        setError(`Failed to save results: ${resultsError.message}`)
+        setSaving(false)
+        return
+      }
 
-    await supabase
-      .from('assessments')
-      .update({ status: 'completed', completed_at: new Date().toISOString() })
-      .eq('id', id)
+      const { error: assessmentError } = await supabase
+        .from('assessments')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', id)
+      
+      if (assessmentError) {
+        console.error('Assessment update error:', assessmentError)
+        setError(`Failed to complete assessment: ${assessmentError.message}`)
+        setSaving(false)
+        return
+      }
 
-    router.push(`/results/${id}`)
+      router.push(`/results/${id}`)
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      setError('An unexpected error occurred. Please try again.')
+      setSaving(false)
+    }
   }
 
   if (loading) {
@@ -137,6 +167,12 @@ export default function AssessmentPage() {
           value={responses[question.id]}
           onChange={handleAnswer}
         />
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Navigation */}
         <div className="flex items-center justify-between mt-6">

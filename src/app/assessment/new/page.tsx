@@ -137,7 +137,8 @@ export default function NewAssessmentPage() {
 
     setLoading(false)
     if (error || !data) {
-      setError('Could not create assessment. Please try again.')
+      console.error('Assessment creation error:', error)
+      setError(error?.message || 'Could not create assessment. Please try again.')
       return
     }
     router.push(`/assessment/${data.id}`)

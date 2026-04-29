@@ -15,13 +15,28 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: result } = await supabase
+  // First check if assessment exists
+  const { data: assessment } = await supabase
+    .from('assessments')
+    .select('id, user_id')
+    .eq('id', id)
+    .single()
+
+  if (!assessment) {
+    console.error(`Assessment ${id} not found for user ${user.id}`)
+    notFound()
+  }
+
+  const { data: result, error: resultError } = await supabase
     .from('results')
     .select('*, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
     .eq('assessment_id', id)
     .single()
 
-  if (!result) notFound()
+  if (!result) {
+    console.error(`Results not found for assessment ${id}:`, resultError)
+    notFound()
+  }
 
   const tier = result.tier as ScoreTier
   const config = TIER_CONFIG[tier]
