@@ -17,7 +17,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
   const { data: result } = await supabase
     .from('results')
-    .select('*, assessments(respondent_type, subject_name, subject_age_range, completed_at)')
+    .select('*, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
     .eq('assessment_id', id)
     .single()
 
@@ -26,7 +26,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const tier = result.tier as ScoreTier
   const config = TIER_CONFIG[tier]
   const domainScores = result.domain_scores as DomainScore[]
-  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; subject_age_range: string; completed_at: string }
+  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; subject_age: number | null; subject_age_range: string; diagnostic_awareness: string | null; completed_at: string }
   const completedDate = new Date(assessment.completed_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
@@ -79,6 +79,27 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
             {assessment.subject_name ? ` — ${assessment.subject_name}` : ''}
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">Completed {completedDate}</p>
+        </div>
+
+        {/* Assessment Context */}
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          {assessment.subject_age && (
+            <div className="bg-white rounded-lg border border-gray-200 p-3">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Age</p>
+              <p className="text-lg font-semibold text-gray-900">{assessment.subject_age} years</p>
+            </div>
+          )}
+          {assessment.diagnostic_awareness && (
+            <div className="bg-white rounded-lg border border-gray-200 p-3">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Diagnostic Status</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {assessment.diagnostic_awareness === 'no_diagnosis_seeking' && 'Seeking assessment'}
+                {assessment.diagnostic_awareness === 'suspected_undiagnosed' && 'Suspected undiagnosed'}
+                {assessment.diagnostic_awareness === 'diagnosed' && 'Already diagnosed'}
+                {assessment.diagnostic_awareness === 'exploring' && 'Exploring'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Tier badge */}
