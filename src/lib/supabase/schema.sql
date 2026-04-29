@@ -29,7 +29,9 @@ CREATE TABLE public.assessments (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   respondent_type TEXT NOT NULL,
   subject_name TEXT,
+  subject_age INTEGER,
   subject_age_range TEXT NOT NULL,
+  diagnostic_awareness TEXT,
   status TEXT DEFAULT 'in_progress' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   completed_at TIMESTAMPTZ

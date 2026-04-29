@@ -1,6 +1,7 @@
 export type RespondentType = 'self_adult' | 'self_teen' | 'parent' | 'teacher'
 export type AgeRange = 'child_5_12' | 'teen_13_17' | 'adult_18_plus'
 export type AssessmentStatus = 'in_progress' | 'completed'
+export type DiagnosticAwareness = 'no_diagnosis_seeking' | 'suspected_undiagnosed' | 'diagnosed' | 'exploring'
 export type ScoreTier = 'no_indicators' | 'some_indicators' | 'strong_indicators'
 
 export interface Question {
@@ -31,7 +32,9 @@ export interface Assessment {
   user_id: string
   respondent_type: RespondentType
   subject_name: string | null
+  subject_age: number | null
   subject_age_range: AgeRange
+  diagnostic_awareness: DiagnosticAwareness | null
   status: AssessmentStatus
   created_at: string
   completed_at: string | null
