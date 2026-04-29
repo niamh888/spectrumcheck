@@ -79,27 +79,27 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
             Screening Results
-            {assessment.subject_name ? ` — ${assessment.subject_name}` : ''}
+            {assessmentData.subject_name ? ` — ${assessmentData.subject_name}` : ''}
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">Completed {completedDate}</p>
         </div>
 
         {/* Assessment Context */}
         <div className="grid grid-cols-2 gap-3 mb-8">
-          {assessment.subject_age && (
+          {assessmentData.subject_age && (
             <div className="bg-white rounded-lg border border-gray-200 p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Age</p>
-              <p className="text-lg font-semibold text-gray-900">{assessment.subject_age} years</p>
+              <p className="text-lg font-semibold text-gray-900">{assessmentData.subject_age} years</p>
             </div>
           )}
-          {assessment.diagnostic_awareness && (
+          {assessmentData.diagnostic_awareness && (
             <div className="bg-white rounded-lg border border-gray-200 p-3">
               <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Diagnostic Status</p>
               <p className="text-sm font-semibold text-gray-900">
-                {assessment.diagnostic_awareness === 'no_diagnosis_seeking' && 'Seeking assessment'}
-                {assessment.diagnostic_awareness === 'suspected_undiagnosed' && 'Suspected undiagnosed'}
-                {assessment.diagnostic_awareness === 'diagnosed' && 'Already diagnosed'}
-                {assessment.diagnostic_awareness === 'exploring' && 'Exploring'}
+                {assessmentData.diagnostic_awareness === 'no_diagnosis_seeking' && 'Seeking assessment'}
+                {assessmentData.diagnostic_awareness === 'suspected_undiagnosed' && 'Suspected undiagnosed'}
+                {assessmentData.diagnostic_awareness === 'diagnosed' && 'Already diagnosed'}
+                {assessmentData.diagnostic_awareness === 'exploring' && 'Exploring'}
               </p>
             </div>
           )}
