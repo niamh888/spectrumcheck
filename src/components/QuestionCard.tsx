@@ -1,3 +1,5 @@
+'use client'
+
 import { SCORE_LABELS } from '@/lib/scoring'
 
 interface Props {

@@ -1,11 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { TIER_CONFIG } from '@/lib/scoring'
+import { TIER_CONFIG, calculateAllScoringMethods } from '@/lib/scoring'
 import { DomainBarChart, DomainRadarChart } from '@/components/DomainChart'
 import Navbar from '@/components/Navbar'
+import ScoringComparison from '@/components/ScoringComparison'
 import type { DomainScore, ScoreTier } from '@/types'
-import { ArrowLeft, Printer, PlusCircle } from 'lucide-react'
+import { ArrowLeft, PlusCircle } from 'lucide-react'
+import PrintButton from '@/components/PrintButton'
 
 export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -15,7 +17,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
   const { data: result } = await supabase
     .from('results')
-    .select('*, assessments(respondent_type, subject_name, completed_at)')
+    .select('*, assessments(respondent_type, subject_name, subject_age_range, completed_at)')
     .eq('assessment_id', id)
     .single()
 
@@ -24,10 +26,28 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const tier = result.tier as ScoreTier
   const config = TIER_CONFIG[tier]
   const domainScores = result.domain_scores as DomainScore[]
-  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; completed_at: string }
+  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; subject_age_range: string; completed_at: string }
   const completedDate = new Date(assessment.completed_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
+
+  // Fetch responses to calculate alternative scoring methods
+  const { data: responses } = await supabase
+    .from('responses')
+    .select('question_id, score')
+    .eq('assessment_id', id)
+  
+  const responseMap: Record<string, number> = {}
+  responses?.forEach((r) => {
+    responseMap[r.question_id] = r.score
+  })
+
+  // Calculate all scoring methods
+  const scoringResults = calculateAllScoringMethods(
+    responseMap,
+    assessment.subject_age_range as any,
+    assessment.respondent_type as any
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -41,13 +61,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
             Dashboard
           </Link>
           <div className="flex gap-2">
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 text-sm text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <Printer className="w-4 h-4" />
-              Print / Save PDF
-            </button>
+            <PrintButton />
             <Link
               href="/assessment/new"
               className="flex items-center gap-1.5 text-sm bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition-colors"
@@ -95,6 +109,11 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           <h2 className="font-semibold text-gray-900 mb-2">Profile overview</h2>
           <p className="text-sm text-gray-400 mb-4">A radar view shows which areas are most prominent.</p>
           <DomainRadarChart domainScores={domainScores} />
+        </div>
+
+        {/* Scoring Comparison */}
+        <div className="mb-8">
+          <ScoringComparison results={scoringResults} />
         </div>
 
         {/* Domain detail */}

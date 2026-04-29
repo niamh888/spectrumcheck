@@ -1,9 +1,55 @@
 import { DOMAIN_MAP, DOMAINS, QUESTIONS } from './questions'
-import type { DomainKey, DomainScore, ScoreTier } from '@/types'
+import type { DomainKey, DomainScore, ScoreTier, RespondentType, AgeRange } from '@/types'
 
 export const SCORE_LABELS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
 
-export function calculateResults(responses: Record<string, number>): {
+export type ScoringMethod = 'standard' | 'age_adjusted' | 'respondent_adjusted'
+
+interface ScoringThresholds {
+  low: number      // < low = no_indicators
+  high: number     // >= high = strong_indicators
+  // between = some_indicators
+}
+
+// Define thresholds for different scoring methods
+const THRESHOLDS: Record<ScoringMethod, ScoringThresholds | Record<string, ScoringThresholds>> = {
+  standard: {
+    low: 30,
+    high: 55,
+  },
+  age_adjusted: {
+    child_5_12: { low: 25, high: 50 },      // Children often show more behavioral differences
+    teen_13_17: { low: 28, high: 52 },      // Teens developing masking strategies
+    adult_18_plus: { low: 30, high: 55 },   // Standard for adults
+  },
+  respondent_adjusted: {
+    self_adult: { low: 30, high: 55 },      // Self-aware adults
+    self_teen: { low: 28, high: 52 },       // Teens may lack self-awareness
+    parent: { low: 25, high: 50 },          // Parents observing overt behaviors
+    teacher: { low: 28, high: 53 },         // Teachers seeing structured contexts
+  },
+}
+
+function getTierForScore(score: number, thresholds: ScoringThresholds): ScoreTier {
+  if (score < thresholds.low) {
+    return 'no_indicators'
+  } else if (score < thresholds.high) {
+    return 'some_indicators'
+  } else {
+    return 'strong_indicators'
+  }
+}
+
+export interface ScoringResult {
+  method: ScoringMethod
+  label: string
+  domainScores: DomainScore[]
+  totalScore: number
+  tier: ScoreTier
+  thresholds: ScoringThresholds
+}
+
+export function calculateResults(responses: Record<string, number>, method: ScoringMethod = 'standard', ageRange?: AgeRange, respondentType?: RespondentType): {
   domainScores: DomainScore[]
   totalScore: number
   tier: ScoreTier
@@ -37,16 +83,55 @@ export function calculateResults(responses: Record<string, number>): {
     domainScores.reduce((acc, d) => acc + d.score, 0) / domainScores.length
   )
 
-  let tier: ScoreTier
-  if (totalScore < 30) {
-    tier = 'no_indicators'
-  } else if (totalScore < 55) {
-    tier = 'some_indicators'
-  } else {
-    tier = 'strong_indicators'
+  // Get thresholds based on method
+  let thresholds: ScoringThresholds = THRESHOLDS.standard as ScoringThresholds
+  
+  if (method === 'age_adjusted' && ageRange) {
+    thresholds = (THRESHOLDS.age_adjusted as Record<string, ScoringThresholds>)[ageRange] || THRESHOLDS.standard as ScoringThresholds
+  } else if (method === 'respondent_adjusted' && respondentType) {
+    thresholds = (THRESHOLDS.respondent_adjusted as Record<string, ScoringThresholds>)[respondentType] || THRESHOLDS.standard as ScoringThresholds
   }
 
+  const tier = getTierForScore(totalScore, thresholds)
+
   return { domainScores, totalScore, tier }
+}
+
+export function calculateAllScoringMethods(
+  responses: Record<string, number>,
+  ageRange: AgeRange,
+  respondentType: RespondentType
+): ScoringResult[] {
+  const results: ScoringResult[] = []
+
+  // Standard scoring
+  const standard = calculateResults(responses, 'standard')
+  results.push({
+    method: 'standard',
+    label: 'Standard Scoring',
+    ...standard,
+    thresholds: THRESHOLDS.standard as ScoringThresholds,
+  })
+
+  // Age-adjusted scoring
+  const ageAdjusted = calculateResults(responses, 'age_adjusted', ageRange)
+  results.push({
+    method: 'age_adjusted',
+    label: `Age-Adjusted (${ageRange.replace(/_/g, '-')})`,
+    ...ageAdjusted,
+    thresholds: (THRESHOLDS.age_adjusted as Record<string, ScoringThresholds>)[ageRange],
+  })
+
+  // Respondent-adjusted scoring
+  const respondentAdjusted = calculateResults(responses, 'respondent_adjusted', undefined, respondentType)
+  results.push({
+    method: 'respondent_adjusted',
+    label: `Respondent-Adjusted (${respondentType.replace(/_/g, ' ')})`,
+    ...respondentAdjusted,
+    thresholds: (THRESHOLDS.respondent_adjusted as Record<string, ScoringThresholds>)[respondentType],
+  })
+
+  return results
 }
 
 export const TIER_CONFIG: Record<
