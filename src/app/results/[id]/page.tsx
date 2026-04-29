@@ -15,18 +15,6 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // First check if assessment exists
-  const { data: assessment } = await supabase
-    .from('assessments')
-    .select('id, user_id')
-    .eq('id', id)
-    .single()
-
-  if (!assessment) {
-    console.error(`Assessment ${id} not found for user ${user.id}`)
-    notFound()
-  }
-
   const { data: result, error: resultError } = await supabase
     .from('results')
     .select('*, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
@@ -41,8 +29,8 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const tier = result.tier as ScoreTier
   const config = TIER_CONFIG[tier]
   const domainScores = result.domain_scores as DomainScore[]
-  const assessment = result.assessments as { respondent_type: string; subject_name: string | null; subject_age: number | null; subject_age_range: string; diagnostic_awareness: string | null; completed_at: string }
-  const completedDate = new Date(assessment.completed_at).toLocaleDateString('en-GB', {
+  const assessmentData = result.assessments as { respondent_type: string; subject_name: string | null; subject_age: number | null; subject_age_range: string; diagnostic_awareness: string | null; completed_at: string }
+  const completedDate = new Date(assessmentData.completed_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
@@ -60,8 +48,8 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   // Calculate all scoring methods
   const scoringResults = calculateAllScoringMethods(
     responseMap,
-    assessment.subject_age_range as any,
-    assessment.respondent_type as any
+    assessmentData.subject_age_range as any,
+    assessmentData.respondent_type as any
   )
 
   return (
