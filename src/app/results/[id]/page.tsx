@@ -8,6 +8,7 @@ import ScoringComparison from '@/components/ScoringComparison'
 import type { DomainScore, ScoreTier, AgeRange, RespondentType } from '@/types'
 import { ArrowLeft, PlusCircle } from 'lucide-react'
 import PrintButton from '@/components/PrintButton'
+import ValidationConsent from '@/components/ValidationConsent'
 
 export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,7 +18,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
   const { data: result, error: resultError } = await supabase
     .from('results')
-    .select('*, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
+    .select('*, validation_consent, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
     .eq('assessment_id', id)
     .single()
 
@@ -162,12 +163,18 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed">
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed mb-4">
           <strong>This is a screening tool, not a diagnostic instrument.</strong> Results do not
           constitute a diagnosis and should not be treated as one. Only a qualified clinician —
           such as a psychologist, psychiatrist, or developmental paediatrician — can make a formal
           diagnosis. If you have concerns, please speak with your GP or seek a specialist referral.
         </div>
+
+        {/* Validation consent */}
+        <ValidationConsent
+          assessmentId={id}
+          initialConsent={result.validation_consent ?? null}
+        />
       </main>
     </div>
   )

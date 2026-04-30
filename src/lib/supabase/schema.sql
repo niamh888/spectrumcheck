@@ -65,8 +65,12 @@ CREATE TABLE public.results (
   domain_scores JSONB NOT NULL,
   total_score NUMERIC NOT NULL,
   tier TEXT NOT NULL,
+  validation_consent BOOLEAN,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: run this if the table already exists
+-- ALTER TABLE public.results ADD COLUMN IF NOT EXISTS validation_consent BOOLEAN;
 ALTER TABLE public.results ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read results for own assessments"
   ON public.results FOR ALL
