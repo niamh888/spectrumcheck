@@ -25,7 +25,7 @@ export default function ValidationConsent({
   if (state === 'accepted') {
     return (
       <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-sm text-green-800">
-        Thank you for contributing. Your anonymised data will help improve SpectrumCheck's accuracy.
+        Thank you for contributing. Your anonymised data will help improve SpectrumCheck&#39;s accuracy.
       </div>
     )
   }
@@ -43,7 +43,7 @@ export default function ValidationConsent({
       <h3 className="font-semibold text-gray-900 mb-2">Help improve SpectrumCheck</h3>
       <p className="text-sm text-gray-600 mb-4 leading-relaxed">
         Would you like to contribute your anonymised responses to our validation dataset?
-        This helps improve SpectrumCheck&apos;s accuracy. Your data will be stored securely
+        This helps improve SpectrumCheck&#39;s accuracy. Your data will be stored securely
         and never linked to your identity.
       </p>
       <div className="flex gap-3">
