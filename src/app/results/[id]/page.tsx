@@ -18,7 +18,7 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
 
   const { data: result, error: resultError } = await supabase
     .from('results')
-    .select('*, validation_consent, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
+    .select('*, assessments(respondent_type, subject_name, subject_age, subject_age_range, diagnostic_awareness, completed_at)')
     .eq('assessment_id', id)
     .single()
 
