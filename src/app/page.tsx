@@ -145,9 +145,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <footer className="mt-auto py-6 px-4 border-t border-gray-100 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} SpectrumCheck · Not a medical service · For informational purposes only
-      </footer>
     </div>
   )
 }
