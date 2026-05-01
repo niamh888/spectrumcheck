@@ -48,6 +48,7 @@ export default function AssessmentPage() {
       setLoading(false)
     }
     load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const question = QUESTIONS[currentIndex]

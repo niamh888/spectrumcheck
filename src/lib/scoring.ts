@@ -1,4 +1,4 @@
-import { DOMAIN_MAP, DOMAINS, QUESTIONS } from './questions'
+import { DOMAINS, QUESTIONS } from './questions'
 import type { DomainKey, DomainScore, ScoreTier, RespondentType, AgeRange } from '@/types'
 
 export const SCORE_LABELS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always']
