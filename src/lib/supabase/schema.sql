@@ -71,6 +71,26 @@ CREATE TABLE public.results (
 
 -- Migration: run this if the table already exists
 -- ALTER TABLE public.results ADD COLUMN IF NOT EXISTS validation_consent BOOLEAN;
+
+-- Feedback
+CREATE TABLE public.feedback (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  assessment_id UUID REFERENCES public.assessments(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage feedback for own assessments"
+  ON public.feedback FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM public.assessments
+    WHERE assessments.id = feedback.assessment_id
+    AND assessments.user_id = auth.uid()
+  ));
+
+-- Migration: run this if tables already exist
+-- (nothing needed — feedback is a new table)
 ALTER TABLE public.results ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can read results for own assessments"
   ON public.results FOR ALL

@@ -9,6 +9,7 @@ import type { DomainScore, ScoreTier, AgeRange, RespondentType } from '@/types'
 import { ArrowLeft, PlusCircle } from 'lucide-react'
 import PrintButton from '@/components/PrintButton'
 import ValidationConsent from '@/components/ValidationConsent'
+import FeedbackWidget from '@/components/FeedbackWidget'
 
 export default async function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -34,6 +35,12 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
   const completedDate = new Date(assessmentData.completed_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
+
+  const { data: feedback } = await supabase
+    .from('feedback')
+    .select('rating, comment')
+    .eq('assessment_id', id)
+    .maybeSingle()
 
   // Fetch responses to calculate alternative scoring methods
   const { data: responses } = await supabase
@@ -175,6 +182,15 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
           assessmentId={id}
           initialConsent={result.validation_consent ?? null}
         />
+
+        {/* Feedback */}
+        <div className="mt-4">
+          <FeedbackWidget
+            assessmentId={id}
+            initialRating={feedback?.rating ?? null}
+            initialComment={feedback?.comment ?? null}
+          />
+        </div>
       </main>
     </div>
   )
