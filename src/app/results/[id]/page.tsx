@@ -170,11 +170,20 @@ export default async function ResultsPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Disclaimer */}
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed mb-4">
-          <strong>This is a screening tool, not a diagnostic instrument.</strong> Results do not
-          constitute a diagnosis and should not be treated as one. Only a qualified clinician —
-          such as a psychologist, psychiatrist, or developmental paediatrician — can make a formal
-          diagnosis. If you have concerns, please speak with your GP or seek a specialist referral.
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-800 leading-relaxed mb-4 space-y-2">
+          <p>
+            <strong>This is a screening tool, not a diagnostic instrument.</strong> Results do not
+            constitute a diagnosis and should not be treated as one. Only a qualified clinician —
+            such as a psychologist, psychiatrist, or developmental paediatrician — can make a formal
+            diagnosis. If you have concerns, please speak with your GP or seek a specialist referral.
+          </p>
+          <p>
+            <strong>Other conditions can influence your score.</strong> Learning differences such as
+            dyslexia, dyspraxia, ADHD, and anxiety can elevate scores in certain domains without
+            indicating autism or Asperger&apos;s Syndrome. If your results feel unexpected, or if a
+            particular domain score stands out, we recommend speaking with a clinician or
+            psychologist who can explore the full picture.
+          </p>
         </div>
 
         {/* Validation consent */}
