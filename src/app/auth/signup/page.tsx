@@ -14,9 +14,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -29,29 +28,9 @@ export default function SignUpPage() {
     if (error) {
       setError(error.message)
     } else {
-      setDone(true)
+      router.push('/dashboard')
+      router.refresh()
     }
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 max-w-md w-full text-center">
-          <Brain className="w-10 h-10 text-indigo-600 mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Check your email</h2>
-          <p className="text-gray-600 text-sm">
-            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your
-            account, then sign in.
-          </p>
-          <Link
-            href="/auth/login"
-            className="mt-6 inline-block text-indigo-600 hover:underline text-sm font-medium"
-          >
-            Go to sign in
-          </Link>
-        </div>
-      </div>
-    )
   }
 
   return (
