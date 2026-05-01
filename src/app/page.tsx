@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, School, ClipboardCheck, TrendingUp, ShieldCheck } from 'lucide-react'
+import { Users, School, ClipboardCheck, TrendingUp, ShieldCheck, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/Navbar'
 
@@ -46,7 +46,7 @@ export default async function LandingPage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-10">Who is this for?</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="p-6 rounded-2xl border border-gray-100 bg-gray-50">
               <Users className="w-8 h-8 text-indigo-600 mb-3" />
               <h3 className="font-semibold text-lg mb-2">Individuals &amp; Families</h3>
@@ -69,6 +69,14 @@ export default async function LandingPage() {
               <p className="text-gray-600 text-sm leading-relaxed">
                 Use as a structured pre-assessment intake tool. Track multiple clients and compare
                 results over time (enhanced professional view coming soon).
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl border border-gray-100 bg-gray-50">
+              <Briefcase className="w-8 h-8 text-orange-500 mb-3" />
+              <h3 className="font-semibold text-lg mb-2">Organisational Psychologists</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Support workplace assessments and neurodiversity initiatives. Use as a structured
+                first step to identify employees who may benefit from reasonable adjustments.
               </p>
             </div>
           </div>
